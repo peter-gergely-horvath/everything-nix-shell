@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+
+# set and IFS was taken from Microsoft Azure CLI templates.
+# -e: immediately exit if any command has a non-zero exit status
+# -o: prevents errors in a pipeline from being masked
+# IFS new value is less likely to cause confusing bugs when looping arrays or arguments (e.g. $@)
+
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
+SCRIPT_NAME="$(basename "$0")"
+
+SUB_COMMAND_DIR="${SCRIPT_DIR}/${SCRIPT_NAME}_subcommands"
+
+if [ ! "$#" -gt 0 ]; then
+    echo "Illegal number of parameters"
+    echo "Usage: foobar <sub-command> ..."
+    echo "Valid sub-commands:"
+    echo "$( cd "${SUB_COMMAND_DIR}" && ls | cut -f1 -d'.' | grep -v '_subcommands' | sed 's/^/    /' )"
+    exit 2
+fi
+
+SUB_COMMAND_NAME="$1"
+
+SUB_COMMAND_SCRIPT="${SUB_COMMAND_DIR}/${SUB_COMMAND_NAME}"
+
+
+if [[ ! -f "${SUB_COMMAND_SCRIPT}" ]]; then
+    echo "no such sub-command: ${SUB_COMMAND_NAME}"
+    exit 2
+fi
+
+"${SUB_COMMAND_SCRIPT}" "${@:2}"
+
